@@ -1,4 +1,4 @@
-import database
+#import database
 import pandas as pd
 from datetime import datetime
 
@@ -10,21 +10,24 @@ GET_SOURCE_NAME = 'EPA_EMISSIONS_CO2_MASS'
 SOURCE_NAME = 'EPA_EMISSIONS_CO2_MASS_STATE_MONTH'
 SOURCE_DESCR = '{meta: "STATE", ref: "STATE", date: "MONTH", value: "CO2_MASS (tons) Montly Sum"}'
 
-def run():
+def get_source_last_update(database):
+    return database.get_last_update(SOURCE_NAME, None)
+
+def run(database):
 	all = pd.DataFrame([])
 	for state in states:
 		df = database.get_data(GET_SOURCE_NAME, state + ';')
 		if not df.empty:
 			print(state)
 			df['date'] = pd.to_datetime(df['date'])
-			df = df.set_index('date')
-			df = df.groupby(pd.TimeGrouper(freq='M'))['value'].sum().reset_index()
+			df['date'] = df['date'].dt.strftime('%Y-%m-01')
+			df = df.groupby(['date'], as_index=False)['value'].sum()
 			df['ref'] = state
 			df['meta'] = state
 			df['file_date'] = datetime.now()
 			all = pd.concat([all, df])
+	if not all.empty:
+		all = all[['ref', 'date', 'value', 'meta', 'file_date']]
+		database.put_all_data(SOURCE_NAME, SOURCE_DESCR, all)
 
-	all = all[['ref', 'date', 'value', 'meta', 'file_date']]
-	database.put_all_data(SOURCE_NAME, SOURCE_DESCR, all)
-
-run()
+#run()

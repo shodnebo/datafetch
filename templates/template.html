@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+  <script src="https://www.google.com/jsapi" type="text/javascript"></script>
+  <script>
+    google.load('visualization', '1', {packages:['table','corechart']});
+    google.setOnLoadCallback(drawTable);
+    function drawTable() {
+	  {% set json_chart = json_chart %}
+	  var json_chart = JSON.parse({{ json_chart|tojson }}.replace(/\bNaN\b/g, "null"));
+      var json_chart_data = new google.visualization.DataTable(json_chart);
+	  {% set json_table = json_table %}
+	  var json_table = JSON.parse({{ json_table|tojson }}.replace(/\bNaN\b/g, "null"));
+      var json_table_data = new google.visualization.DataTable(json_table);
+
+      var formatter = new google.visualization.NumberFormat({negativeColor: 'red', pattern:'# K'});
+      var formatter_short = new google.visualization.DateFormat({pattern: 'MMM yyyy'});
+      formatter_short.format(json_table_data, 0);
+      formatter.format(json_table_data, 1);
+      formatter.format(json_table_data, 2);
+      formatter.format(json_table_data, 3);
+      formatter.format(json_table_data, 4);
+
+      var json_table = new google.visualization.Table(document.getElementById('table_div'));
+      json_table.draw(json_table_data, {showRowNumber: true});
+
+      var options = {
+        title: 'CO2 emission per state',
+		isStacked: true,
+        legend: {position: 'top', maxLines: 3},
+        hAxis: {title: 'Month',  titleTextStyle: {color: '#333'}},
+        vAxis: {minValue: 0}
+      };
+
+      var chart = new google.visualization.AreaChart(document.getElementById('chart_div'));
+      chart.draw(json_chart_data, options);
+    }
+  </script>
+  <body>
+	<h1>DataFetch</h1>
+    <p>List of available data sources. Click to update data</p>
+    <form action="/" method="post">
+
+    <table>
+    <tr><th>Source</th><th>Last update</th><th>Status</th></tr>
+    <tr><td><input type="submit" name="source" value="EPA_EMISSIONS_CO2_MASS">
+      </td><td>{{lastUpdate1}}</td><td>{{status1}}</td></tr>
+    <tr><td><input type="submit" name="source" value="EPA_EMISSIONS_CO2_MASS_STATE_MONTH">
+      </td><td>{{lastUpdate2}}</td><td>{{status2}}</td></tr>
+    <tr><td><input type="submit" name="source" value="EPA_EMISSIONS_CO2_MASS_TEST">
+      </td><td>{{lastUpdate3}}</td><td>{{status3}}</td></tr>
+    </table>
+
+	</form>
+
+    <H1>Table </H1>
+    <div id="table_div"></div>
+    <H1>Chart</H1>
+    <div id="chart_div"></div>
+  </body>
+</html>
+
+
+
